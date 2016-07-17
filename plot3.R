@@ -1,29 +1,29 @@
-power <- read.csv("household_power_consumption.txt", header=TRUE, sep=";")
+#Read in the data and format Date and Time columns
+power <- read.csv('household_power_consumption.txt', sep=';', header = TRUE)
+power$Date <- as.Date(power$Date, format='%d/%m/%Y')
+power$Time <- strptime(power$Time, format='%H:%M:%S')
+power$Time <- format(smallpower$Time, format='%H:%M:%S')
+power$DateTime <- as.POSIXct(paste(power$Date, power$Time), format='%Y-%m-%d %H:%M:%S')
 
-power$Time <- strptime(power$Time, format="%H:%M")
-power$Time <- format(power$Time, "%H:%M:%S")
+#subset the data to only include rows with dates on 2007-02-01 and 2007-02-02
+feb1 <- as.Date("2007-02-01", format="%Y-%m-%d")
+feb2 <- as.Date("2007-02-02", format="%Y-%m-%d")
+smallpower <- power[power$Date >= feb1 & power$Date <= feb2,]
 
-power$Date <- as.Date(power$Date, format="%Y-%m-%d")
+#Convert sub_metering values to be numeric
+smallpower$Sub_metering_1 <- as.numeric(as.character(smallpower$Sub_metering_1))
+smallpower$Sub_metering_2 <- as.numeric(as.character(smallpower$Sub_metering_2))
+smallpower$Sub_metering_3 <- as.numeric(as.character(smallpower$Sub_metering_3))
 
-power$Global_active_power <- sapply(power$Global_active_power, as.numeric)
+#make plot
+plot(smallpower$DateTime, smallpower$Sub_metering_1, type="n", ylab="Energy sub metering", xlab="")
+lines(smallpower$DateTime, smallpower$Sub_metering_1, type="l")
+lines(smallpower$DateTime, smallpower$Sub_metering_2, type="l", col="red")
+lines(smallpower$DateTime, smallpower$Sub_metering_3, type="l", col="blue")
 
-power2007 <- subset(power, Date >= as.Date("2007-02-01") & Date <= as.Date("2007-02-02") )
+#Make the legend
+legend("topright", legend=c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), col=c("black", "red", "blue"), lty=1, cex=0.75)
 
-power2007$DateTime <- as.POSIXct(paste(power2007$Date, power2007$Time), format="%Y-%m-%d %H:%M:%S")
-
-power$Global_active_power <- sapply(power$Global_active_power, as.numeric)
-
-options(scipen=5)
-
-
-plot(power2007$DateTime, power2007$Sub_metering_1, pch="", ylab="Energy sub metering", xlab="", yaxt="n")
-lines(power2007$DateTime, power2007$Sub_metering_1, type="l")
-lines(power2007$DateTime, power2007$Sub_metering_2, col="red", type="l")
-lines(power2007$DateTime, power2007$Sub_metering_3, col="blue", type="l")
-
-axis(2, at = seq(0, 30, by = 10))
-
-legend("topright", c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), lty=c(1,1), lwd=c(1,1,1), col=c("black", "red", "blue"))
-
+#Save as .png file
 dev.copy(png, "plot3.png", width=480, height=480, units="px")
 dev.off()
